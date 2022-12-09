@@ -59,7 +59,7 @@ Vectorized Nonnegative Matrix Factorization with heteroscedastic uncertainties a
          the weight (V), the mask (M), W, H or n_component.
          At the instantiation, the code makes a copy of everything.
          For big jobs with many iterations, this could be a severe bottleneck.
-         For now, I think this is a safer way.
+         For now, I think this is a safer way. But we can think about making it better!
 
       -- It has W_only and H_only options. If you know H or W, and would like
          to calculate W or H. You can run, e.g.,
