@@ -84,7 +84,7 @@ nmf.py
 import numpy as np
 from scipy import sparse
 from time import time
-
+from numba import jit
 # Some magic numbes
 _largenumber = 1E100
 _smallnumber = 1E-5
@@ -147,7 +147,8 @@ class NMF:
         -- 13-May-2016, Add projection mode (W_only, H_only), BGT, JHU
         -- 30-Nov-2014, Started, BGT, JHU
     """
-
+    
+    from numba import njit
     def __init__(self, X, W=None, H=None, V=None, M=None, n_components=5):
         """
         Initialization
@@ -167,7 +168,7 @@ class NMF:
         # I'm making a copy for the safety of everything; should not be a bottleneck
         self.X = np.copy(X) 
         if (np.count_nonzero(self.X<0)>0):
-            print("There are negative values in X. Setting them to be zero...", flush=True)
+            #print("There are negative values in X. Setting them to be zero...", flush=True)
             self.X[self.X<0] = 0.
 
         self.n_components = n_components
@@ -181,7 +182,7 @@ class NMF:
                 raise ValueError("Initial W has wrong shape.")
             self.W = np.copy(W)
         if (np.count_nonzero(self.W<0)>0):
-            print("There are negative values in W. Setting them to be zero...", flush=True)
+            #print("There are negative values in W. Setting them to be zero...", flush=True)
             self.W[self.W<0] = 0.
 
         if (H is None):
@@ -191,7 +192,7 @@ class NMF:
                 raise ValueError("Initial H has wrong shape.")
             self.H = np.copy(H)
         if (np.count_nonzero(self.H<0)>0):
-            print("There are negative values in H. Setting them to be zero...", flush=True)
+            #print("There are negative values in H. Setting them to be zero...", flush=True)
             self.H[self.H<0] = 0.
 
         if (V is None):
@@ -201,7 +202,7 @@ class NMF:
                 raise ValueError("Initial V(Weight) has wrong shape.")
             self.V = np.copy(V)
         if (np.count_nonzero(self.V<0)>0):
-            print("There are negative values in V. Setting them to be zero...", flush=True)
+            #print("There are negative values in V. Setting them to be zero...", flush=True)
             self.V[self.V<0] = 0.
 
         if (M is None):
@@ -225,7 +226,7 @@ class NMF:
         diff = self.X - np.dot(self.W, self.H)
         chi2 = np.einsum('ij,ij', self.V*diff, diff)/self.V_size
         return chi2
-
+    
     def SolveNMF(self, W_only=False, H_only=False, sparsemode=False, maxiters=None, tol=None):
         """
         Construct the NMF basis
@@ -301,15 +302,15 @@ class NMF:
             if (not np.isfinite(chi2)):
                raise ValueError("NMF construction failed, likely due to missing data")
 
-            if (np.mod(niter, 100)==0):
-                print("Current Chi2={0:.4f}, Previous Chi2={1:.4f}, Change={2:.4f}% @ niters={3}".format(chi2,oldchi2,(oldchi2-chi2)/oldchi2*100.,niter), flush=True)
+           # if (np.mod(niter, 50)==0):
+           #     print("Current Reduced Chi2={0:.4f}, Previous Chi2={1:.4f}, Change={2:.4f}% @ niters={3}".format(chi2,oldchi2,(oldchi2-chi2)/oldchi2*100.,niter), flush=True)
 
             niter += 1
             if (niter == self.maxiters):
                 print("Iteration in re-initialization reaches maximum number = {0}".format(niter), flush=True)
 
         time_used = (time()-t0)/60.
-        print("Took {0:.3f} minutes to reach current solution.".format(time_used), flush=True)
+        #print("Took {0:.3f} minutes to reach current solution.".format(time_used), flush=True)
 
         return (chi2, time_used)
 
